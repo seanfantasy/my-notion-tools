@@ -3,21 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Launching MetService...</title>
-    
-    <meta http-equiv="refresh" content="0; url=shortcuts://run-shortcut?name=OpenMet">
-    
+    <title>App Launcher</title>
     <style>
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-family: -apple-system, sans-serif;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
             height: 100vh;
             background-color: #f5f5f5;
             text-align: center;
+            padding: 20px;
         }
         .btn {
+            margin-top: 20px;
             padding: 15px 30px;
             background-color: #007AFF;
             color: white;
@@ -25,21 +25,51 @@
             border-radius: 12px;
             font-weight: bold;
             font-size: 18px;
+            display: inline-block;
+        }
+        .error {
+            color: #ff3b30;
+            margin-top: 20px;
         }
     </style>
 </head>
 <body>
-    <div>
-        <p>🚀正在啟動 MetService...</p>
-        <p>如果沒有反應，請點擊下方按鈕：</p>
-        <a href="shortcuts://run-shortcut?name=OpenMet" class="btn">手動開啟</a>
+    <div id="status">
+        <h2>🚀 準備啟動...</h2>
+        <p>正在分析指令...</p>
     </div>
 
     <script>
-        // 設定緩衝時間讓瀏覽器有時間反應
-        setTimeout(function() {
-            window.location.href = "shortcuts://run-shortcut?name=OpenMet";
-        }, 50);
+        // 1. 取得網址參數
+        const urlParams = new URLSearchParams(window.location.search);
+        const shortcutName = urlParams.get('name'); // 抓取 ?name= 後面的值
+
+        const statusDiv = document.getElementById('status');
+
+        if (shortcutName) {
+            // 2. 組合捷徑 URL
+            const targetUrl = `shortcuts://run-shortcut?name=${encodeURIComponent(shortcutName)}`;
+            
+            // 更新畫面文字
+            statusDiv.innerHTML = `
+                <h2>🚀 正在啟動: ${shortcutName}</h2>
+                <p>請在彈出視窗點擊「打開」</p>
+                <a href="${targetUrl}" class="btn">手動開啟</a>
+            `;
+
+            // 3. 執行跳轉 (延遲 50ms 確保 DOM 載入)
+            setTimeout(function() {
+                window.location.href = targetUrl;
+            }, 50);
+            
+        } else {
+            // 錯誤處理：沒有提供參數
+            statusDiv.innerHTML = `
+                <h2 style="color:#333">⚠️ 缺少參數</h2>
+                <p>請在網址後方加上 ?name=捷徑名稱</p>
+                <p class="error">範例：.../index.html?name=met</p>
+            `;
+        }
     </script>
 </body>
 </html>
