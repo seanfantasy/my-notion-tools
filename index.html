@@ -2,68 +2,147 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
     <title>Universal Launcher</title>
+
     <style>
+        /* body 標籤的樣式：設定整個頁面的背景與排版 */
         body {
-            font-family: -apple-system, sans-serif;
+            /* 設定字體，優先使用蘋果系統字體，其次是各平台的無襯線字體 */
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            
+            /* 使用 Flexbox 排版模型 */
             display: flex;
+            
+            /* 設定主軸方向為「垂直」排列 (由上到下) */
             flex-direction: column;
+            
+            /* 在主軸 (垂直方向) 上置中對齊 */
             justify-content: center;
+            
+            /* 在交叉軸 (水平方向) 上置中對齊 */
             align-items: center;
+            
+            /* 設定高度為 100vh (視窗高度的 100%)，佔滿整個螢幕 */
             height: 100vh;
+            
+            /* 設定背景顏色為淺灰色 */
             background-color: #f5f5f5;
+            
+            /* 設定文字水平置中 */
             text-align: center;
+            
+            /* 移除預設邊距 */
+            margin: 0;
+            
+            /* 設定內距，避免內容貼齊邊緣 */
             padding: 20px;
         }
+
+        /* .card 類別樣式：中間那個白色卡片區塊 */
         .card {
+            /* 背景設為白色 */
             background: white;
+            
+            /* 內距 30px，讓文字不要貼齊邊框 */
             padding: 30px;
+            
+            /* 圓角 20px，讓卡片看起來比較圓潤現代 */
             border-radius: 20px;
+            
+            /* 設定陰影，創造立體感 (x偏移 y偏移 模糊半徑 顏色透明度) */
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            
+            /* 限制最大寬度為螢幕的 90% */
             max-width: 90%;
+            
+            /* 如果網址太長，強制換行，避免撐破版面 */
             word-break: break-all;
         }
+
+        /* .btn 類別樣式：手動開啟按鈕 */
         .btn {
+            /* 與上方文字保持 20px 距離 */
             margin-top: 20px;
+            
+            /* 按鈕內距 (上下 15px, 左右 30px) */
             padding: 15px 30px;
+            
+            /* 背景色設為 iOS 風格的藍色 */
             background-color: #007AFF;
+            
+            /* 文字顏色設為白色 */
             color: white;
+            
+            /* 移除超連結預設的底線 */
             text-decoration: none;
+            
+            /* 按鈕圓角 12px */
             border-radius: 12px;
+            
+            /* 字體加粗 */
             font-weight: bold;
+            
+            /* 字體大小 */
             font-size: 18px;
+            
+            /* 設定為行內區塊元素，才能設定寬高與邊距 */
             display: inline-block;
         }
+
+        /* 標題與段落的微調 */
         h2 { margin-top: 0; }
-        p { color: #666; }
+        p { color: #666; } /* 設定段落文字為深灰色 */
     </style>
 </head>
 <body>
+
     <div class="card" id="status">
         <h2>🚀 準備啟動...</h2>
         <p>正在解析指令...</p>
     </div>
 
     <script>
-        // 1. 取得網址參數
+        // --- 步驟 1: 取得網址參數 ---
+        
+        // window.location.search 會抓取網址中問號後面的字串 (例如 ?name=met)
+        // URLSearchParams 是一個瀏覽器內建 API，用來解析這些參數
         const urlParams = new URLSearchParams(window.location.search);
-        const directUrl = urlParams.get('url');   // 模式 A: 直接傳 Scheme
-        const shortcutName = urlParams.get('name'); // 模式 B: 呼叫捷徑
+        
+        // 嘗試取得 'url' 參數 (對應直接呼叫 App 的模式)
+        const directUrl = urlParams.get('url');
+        
+        // 嘗試取得 'name' 參數 (對應 iOS 捷徑模式)
+        const shortcutName = urlParams.get('name'); 
 
+        // 取得 HTML 中的 status 區塊，準備用來更新畫面
         const statusDiv = document.getElementById('status');
+        
+        // 宣告變數 finalTarget，用來儲存最後要跳轉的網址
         let finalTarget = "";
 
-        // 2. 決定跳轉目標
+        // --- 步驟 2: 決定跳轉目標 ---
+
+        // 邏輯 A: 如果有提供 'url' 參數 (例如 ?url=line://)
         if (directUrl) {
-            // 如果網址有 encoded 的字符，這裡會自動 decode，但為了安全與正確傳遞，通常不需要額外處理
+            // 直接將參數值設為目標
             finalTarget = directUrl;
+        
+        // 邏輯 B: 如果有提供 'name' 參數 (例如 ?name=met)
         } else if (shortcutName) {
+            // 組合成 iOS 捷徑的專用格式：shortcuts://run-shortcut?name=名稱
+            // encodeURIComponent 用來處理特殊字元 (例如空格變成 %20)，防止網址錯誤
             finalTarget = `shortcuts://run-shortcut?name=${encodeURIComponent(shortcutName)}`;
         }
 
-        // 3. 執行邏輯
+        // --- 步驟 3: 執行跳轉與更新畫面 ---
+
+        // 如果 finalTarget 有值 (代表參數正確)
         if (finalTarget) {
+            // 更新畫面 HTML，顯示正在開啟的訊息
+            // 包含一個 <a> 標籤作為備用按鈕，萬一自動跳轉失敗，使用者可以手動點擊
             statusDiv.innerHTML = `
                 <h2>🚀 正在前往 APP</h2>
                 <p style="font-size: 12px; color: #999;">${finalTarget}</p>
@@ -71,12 +150,18 @@
                 <a href="${finalTarget}" class="btn">手動開啟</a>
             `;
 
-            // 延遲執行，給瀏覽器一點緩衝
+            // 使用 setTimeout 設定延遲執行
+            // 延遲 50 毫秒 (ms)
+            // 原因：為了確保上面的 innerHTML 已經渲染到畫面上，讓使用者看得到回饋
+            // 同時也解決部分瀏覽器在頁面尚未完全載入就跳轉可能會失敗的 Bug
             setTimeout(function() {
+                // 修改視窗位置，這行指令會觸發瀏覽器跳轉
                 window.location.href = finalTarget;
             }, 50);
             
         } else {
+            // --- 錯誤處理 ---
+            // 如果沒有抓到任何參數，顯示錯誤訊息與教學
             statusDiv.innerHTML = `
                 <h2 style="color:#ff3b30">⚠️ 參數錯誤</h2>
                 <p>請使用以下格式：</p>
