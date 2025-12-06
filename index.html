@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>App Launcher</title>
+    <title>Universal Launcher</title>
     <style>
         body {
             font-family: -apple-system, sans-serif;
@@ -16,6 +16,14 @@
             text-align: center;
             padding: 20px;
         }
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            max-width: 90%;
+            word-break: break-all;
+        }
         .btn {
             margin-top: 20px;
             padding: 15px 30px;
@@ -27,47 +35,53 @@
             font-size: 18px;
             display: inline-block;
         }
-        .error {
-            color: #ff3b30;
-            margin-top: 20px;
-        }
+        h2 { margin-top: 0; }
+        p { color: #666; }
     </style>
 </head>
 <body>
-    <div id="status">
+    <div class="card" id="status">
         <h2>🚀 準備啟動...</h2>
-        <p>正在分析指令...</p>
+        <p>正在解析指令...</p>
     </div>
 
     <script>
         // 1. 取得網址參數
         const urlParams = new URLSearchParams(window.location.search);
-        const shortcutName = urlParams.get('name'); // 抓取 ?name= 後面的值
+        const directUrl = urlParams.get('url');   // 模式 A: 直接傳 Scheme
+        const shortcutName = urlParams.get('name'); // 模式 B: 呼叫捷徑
 
         const statusDiv = document.getElementById('status');
+        let finalTarget = "";
 
-        if (shortcutName) {
-            // 2. 組合捷徑 URL
-            const targetUrl = `shortcuts://run-shortcut?name=${encodeURIComponent(shortcutName)}`;
-            
-            // 更新畫面文字
+        // 2. 決定跳轉目標
+        if (directUrl) {
+            // 如果網址有 encoded 的字符，這裡會自動 decode，但為了安全與正確傳遞，通常不需要額外處理
+            finalTarget = directUrl;
+        } else if (shortcutName) {
+            finalTarget = `shortcuts://run-shortcut?name=${encodeURIComponent(shortcutName)}`;
+        }
+
+        // 3. 執行邏輯
+        if (finalTarget) {
             statusDiv.innerHTML = `
-                <h2>🚀 正在啟動: ${shortcutName}</h2>
+                <h2>🚀 正在前往 APP</h2>
+                <p style="font-size: 12px; color: #999;">${finalTarget}</p>
                 <p>請在彈出視窗點擊「打開」</p>
-                <a href="${targetUrl}" class="btn">手動開啟</a>
+                <a href="${finalTarget}" class="btn">手動開啟</a>
             `;
 
-            // 3. 執行跳轉 (延遲 50ms 確保 DOM 載入)
+            // 延遲執行，給瀏覽器一點緩衝
             setTimeout(function() {
-                window.location.href = targetUrl;
+                window.location.href = finalTarget;
             }, 50);
             
         } else {
-            // 錯誤處理：沒有提供參數
             statusDiv.innerHTML = `
-                <h2 style="color:#333">⚠️ 缺少參數</h2>
-                <p>請在網址後方加上 ?name=捷徑名稱</p>
-                <p class="error">範例：.../index.html?name=met</p>
+                <h2 style="color:#ff3b30">⚠️ 參數錯誤</h2>
+                <p>請使用以下格式：</p>
+                <p>1. 直接開啟: ?url=line://<br>
+                   2. 開啟捷徑: ?name=MyShortcut</p>
             `;
         }
     </script>
